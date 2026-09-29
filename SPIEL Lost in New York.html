@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lost in New York</title>
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --tile:#ECEEEB; --grout:#D6D9D5;
+  --paper:#FFFFFF; --paper2:#F1F2EF;
+  --ink:#1A1D20; --muted:#5A6067; --hair:#C9CCC8;
+  --sign:#000000; --signText:#FFFFFF;
+  --focus:#0039A6;
+  --tileImg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48'%3E%3Cpath d='M0 .5H96M0 24.5H96M.5 0V24M48.5 0V24M24.5 24V48M72.5 24V48' stroke='%23D6D9D5' fill='none'/%3E%3C/svg%3E");
+  --ui:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --read:Georgia,"Times New Roman",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --tile:#171B1F; --grout:#232A30;
+    --paper:#20252A; --paper2:#2A3036;
+    --ink:#ECEDEA; --muted:#A5ABB1; --hair:#39424A;
+    --focus:#7FA6FF;
+    --tileImg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48'%3E%3Cpath d='M0 .5H96M0 24.5H96M.5 0V24M48.5 0V24M24.5 24V48M72.5 24V48' stroke='%23232A30' fill='none'/%3E%3C/svg%3E");
+  }
+}
+:root[data-theme="dark"]{
+  --tile:#171B1F; --grout:#232A30;
+  --paper:#20252A; --paper2:#2A3036;
+  --ink:#ECEDEA; --muted:#A5ABB1; --hair:#39424A;
+  --focus:#7FA6FF;
+  --tileImg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48'%3E%3Cpath d='M0 .5H96M0 24.5H96M.5 0V24M48.5 0V24M24.5 24V48M72.5 24V48' stroke='%23232A30' fill='none'/%3E%3C/svg%3E");
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; min-height:100vh;
+  background-color:var(--tile); background-image:var(--tileImg);
+  color:var(--ink); font-family:var(--ui);
+  -webkit-font-smoothing:antialiased; -webkit-text-size-adjust:100%;
+}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+/* ---------- status bar ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:#000;color:#fff}
+.status{max-width:780px;margin:0 auto;display:flex;align-items:center;gap:18px;padding:10px 16px 8px}
+.clock{display:flex;align-items:center;gap:2px;perspective:300px}
+.flap{display:inline-block;min-width:.72em;text-align:center;background:#1E1E1E;border-radius:4px;padding:3px 4px 2px;
+  font:700 22px/1 var(--ui);font-variant-numeric:tabular-nums;position:relative;transform-origin:50% 50%}
+.flap.colon{background:none;min-width:auto;padding:3px 1px 2px}
+.flap:not(.colon)::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:#000}
+.flap.flip{animation:flip .42s cubic-bezier(.3,.7,.4,1)}
+@keyframes flip{0%{transform:rotateX(-90deg)}100%{transform:rotateX(0)}}
+.ampm{font:600 13px var(--ui);margin-left:5px;color:#BFC4C8}
+.batt{display:flex;align-items:center;gap:8px;font:700 17px var(--ui);font-variant-numeric:tabular-nums}
+.bicon{width:34px;height:17px;border:2px solid #fff;border-radius:4px;position:relative;padding:2px}
+.bicon::after{content:"";position:absolute;right:-5px;top:4px;width:3px;height:5px;background:#fff;border-radius:0 2px 2px 0}
+.bicon i{display:block;height:100%;border-radius:1px;background:#fff;transition:width .5s ease}
+.batt.low .bicon i{background:#FCCC0A}.batt.low{color:#FCCC0A}
+.batt.crit .bicon i{background:#EE352E}.batt.crit{color:#FF6B63}.batt.crit .bicon{border-color:#FF6B63}
+.status .spacer{flex:1}
+.menu{background:none;border:1.5px solid #666;color:#fff;border-radius:999px;padding:6px 14px;font:600 14px var(--ui);cursor:pointer}
+.preview-flag{font:600 13px var(--ui);background:#FCCC0A;color:#000;border-radius:4px;padding:3px 8px}
+.route{max-width:780px;margin:0 auto;display:flex;align-items:center;overflow-x:auto;padding:2px 16px 10px;scrollbar-width:none}
+.route::-webkit-scrollbar{display:none}
+.stop{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 11px/1 var(--ui);font-variant-numeric:tabular-nums}
+.stop.now{width:30px;height:30px;font-size:13px;box-shadow:0 0 0 2px #000,0 0 0 4px #fff}
+.link{flex:none;width:10px;height:3px;background:#4A4F54}
+
+/* ---------- layout ---------- */
+.wrap{max-width:780px;margin:0 auto;padding:22px 16px 48px}
+.card{border-radius:8px;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.06),0 14px 30px -12px rgba(0,0,0,.25)}
+.sign{background:var(--sign);color:var(--signText);position:relative;display:flex;align-items:center;gap:16px;padding:26px 22px 20px}
+.sign::before{content:"";position:absolute;left:0;right:0;top:9px;height:2px;background:#fff}
+.bullet{flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--line);color:var(--lineFg);
+  font:800 22px/1 var(--ui);font-variant-numeric:tabular-nums}
+.sign h1{margin:0;font:700 clamp(25px,4.6vw,36px)/1.08 var(--ui);letter-spacing:-.01em}
+.paper{background:var(--paper);padding:18px 24px 26px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font:500 15px var(--ui);color:var(--muted);margin-bottom:6px}
+.meta b{color:var(--ink);font-weight:700}
+.voice{display:inline-flex;align-items:center;gap:6px}
+.voice svg{width:18px;height:18px}
+.voice.whisper{color:#B933AD}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 2px}
+.chip{font:600 14px var(--ui);border-radius:999px;padding:4px 11px;background:var(--paper2);color:var(--ink)}
+.chip.minus{background:#FDE3E1;color:#9B1C15}
+.chip.plus{background:#DDF1E4;color:#0B5E2B}
+:root[data-theme="dark"] .chip.minus{background:#4A2320;color:#FFB4AE}
+:root[data-theme="dark"] .chip.plus{background:#1D3B28;color:#9EE2B5}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .chip.minus{background:#4A2320;color:#FFB4AE}
+  :root:not([data-theme="light"]) .chip.plus{background:#1D3B28;color:#9EE2B5}
+}
+.story p{font:400 20px/1.62 var(--read);max-width:64ch;margin:16px 0 0}
+.gl{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;
+  text-decoration:underline;text-decoration-style:dotted;text-decoration-thickness:2px;text-underline-offset:4px;text-decoration-color:var(--line)}
+.glbox{margin:10px 0 0;padding:10px 14px;border-left:4px solid var(--line);background:var(--paper2);font:500 17px/1.45 var(--ui);max-width:64ch}
+
+/* action */
+.action{margin:18px 0 0;background:#FCCC0A;color:#000;border-radius:8px;padding:14px 16px 16px;max-width:64ch}
+.action .alabel{font:800 15px var(--ui);display:flex;align-items:center;gap:8px}
+.action .alabel::before{content:"";width:12px;height:12px;border-radius:50%;background:#000}
+.action p{margin:6px 0 12px !important;font:600 19px/1.4 var(--ui) !important}
+.abtn{background:#000;color:#FCCC0A;border:0;border-radius:999px;padding:10px 20px;font:700 16px var(--ui);cursor:pointer;min-width:140px}
+.abtn[disabled]{cursor:default;opacity:.9}
+
+/* fact */
+.fact{margin:20px 0 0;border:1.5px solid var(--hair);border-radius:8px;max-width:64ch}
+.fact summary{cursor:pointer;list-style:none;padding:11px 14px;font:700 16px var(--ui);display:flex;align-items:center;gap:10px}
+.fact summary::-webkit-details-marker{display:none}
+.fact summary::before{content:"i";display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--line);color:var(--lineFg);font:italic 700 14px var(--read)}
+.fact[open] summary{border-bottom:1.5px solid var(--hair)}
+.fact p{margin:0;padding:12px 14px 14px;font:400 18px/1.55 var(--read)}
+
+/* options */
+.opts{margin-top:24px;display:grid;gap:10px}
+.opts.locked{opacity:.4;pointer-events:none}
+.lockhint{font:500 14px var(--ui);color:var(--muted);margin-top:18px}
+.opt{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;
+  background:var(--paper);border:2px solid var(--ink);border-radius:10px;padding:13px 14px;font:600 17px/1.35 var(--ui)}
+.opt:hover{background:var(--paper2)}
+.opt:active{transform:translateY(1px)}
+.opt .dot{width:14px;height:14px;border-radius:50%;background:var(--to);box-shadow:0 0 0 1.5px rgba(0,0,0,.25)}
+.opt .costs{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.opt .cost{font:700 13px var(--ui);border-radius:999px;padding:3px 9px;background:var(--paper2);white-space:nowrap}
+.opt .cost.bat{background:#FDE3E1;color:#9B1C15}
+.opt .why{grid-column:2/4;font:500 13.5px var(--ui);color:var(--muted);margin-top:-4px}
+.opt[disabled]{opacity:.42;cursor:not-allowed;border-style:dashed}
+.opt.fits{border-color:var(--to);box-shadow:inset 0 0 0 1px var(--to)}
+
+/* start */
+.hero{padding:44px 26px 34px;flex-direction:column;align-items:flex-start;gap:18px}
+.hero h1{font-size:clamp(40px,8vw,66px);line-height:.98}
+.lines{display:flex;gap:8px}
+.lines span{width:26px;height:26px;border-radius:50%}
+.paper h2{font:700 21px var(--ui);margin:22px 0 8px}
+.rules{margin:0;padding:0 0 0 20px;font:400 18px/1.55 var(--read);max-width:64ch}
+.rules li{margin:5px 0}
+.names{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+.names label{font:600 14px var(--ui);color:var(--muted);display:grid;gap:6px}
+.names input{font:500 18px var(--ui);padding:11px 12px;border:2px solid var(--hair);border-radius:8px;background:var(--paper);color:var(--ink)}
+.cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.btn{border:0;border-radius:999px;padding:14px 24px;font:700 18px var(--ui);cursor:pointer;background:#000;color:#fff}
+.btn.alt{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 2px var(--ink)}
+.shelf{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.slot{border-radius:8px;padding:12px 10px;min-height:72px;display:flex;flex-direction:column;justify-content:space-between;
+  border:2px dashed var(--hair);color:var(--muted);font:600 14px/1.25 var(--ui)}
+.slot.got{border:0;background:var(--ec);color:var(--efg)}
+.slot small{font:500 12px var(--ui);opacity:.85}
+.tlink{background:none;border:0;color:var(--muted);font:500 14px var(--ui);text-decoration:underline;margin-top:26px;cursor:pointer;padding:0}
+
+/* ending */
+.ending .sign{padding:40px 24px 30px;flex-direction:column;align-items:flex-start;gap:14px}
+.ending .sign::after{content:"";position:absolute;left:0;right:0;bottom:0;height:10px;background:var(--line)}
+.ending .sign h1{font-size:clamp(38px,7vw,58px);}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:22px}
+.stat{background:var(--paper2);border-radius:8px;padding:12px 14px}
+.stat b{display:block;font:700 24px var(--ui);font-variant-numeric:tabular-nums}
+.stat span{font:500 13px var(--ui);color:var(--muted)}
+.endroute{display:flex;flex-wrap:wrap;align-items:center;row-gap:8px;margin-top:10px}
+.endroute .link{background:var(--hair)}
+.tasks{margin:0;padding-left:20px;font:400 18px/1.55 var(--read);max-width:64ch}
+.tasks li{margin:8px 0}
+
+/* teacher */
+.tlist{display:grid;gap:6px;margin-top:10px}
+.trow{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;background:var(--paper2)}
+.trow .stop{width:30px;height:30px;font-size:12px}
+.trow .tt{font:600 15px/1.3 var(--ui)}
+.trow .tx{font:500 13px/1.4 var(--ui);color:var(--muted);display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:3px}
+.trow .tx .stop{width:20px;height:20px;font-size:10px}
+.small{border:0;border-radius:999px;padding:8px 14px;font:600 14px var(--ui);background:#000;color:#fff;cursor:pointer}
+.pin{display:flex;gap:8px;margin-top:10px}
+.pin input{font:600 20px var(--ui);width:120px;padding:10px 12px;border:2px solid var(--hair);border-radius:8px;letter-spacing:.2em;background:var(--paper);color:var(--ink)}
+.note{font:400 17px/1.55 var(--read);max-width:64ch}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font:500 14px var(--ui);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:50%}
+
+/* toast */
+.toast{position:fixed;left:50%;transform:translate(-50%,8px);top:calc(env(safe-area-inset-top,0px) + 96px);z-index:40;
+  display:flex;gap:8px;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast span{font:700 15px var(--ui);background:#000;color:#fff;border-radius:999px;padding:8px 14px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.toast span.m{background:#EE352E}
+.toast span.p{background:#00933C}
+
+/* subway doors */
+.doors{position:fixed;inset:0;z-index:60;pointer-events:none}
+.door{position:absolute;top:0;bottom:0;width:50.5%;transition:transform .33s cubic-bezier(.7,0,.3,1);
+  background:linear-gradient(90deg,#8C959D,#C9CFD4 45%,#A3ABB2)}
+.door::after{content:"";position:absolute;top:16%;height:36%;left:26%;width:48%;border-radius:12px;background:#28303A;box-shadow:inset 0 0 0 4px #6F7982}
+.door.l{left:0;transform:translateX(-101%);box-shadow:inset -3px 0 0 #3C444C}
+.door.r{right:0;transform:translateX(101%);box-shadow:inset 3px 0 0 #3C444C}
+.doors.shut .door{transform:translateX(0)}
+
+/* card effects */
+.fx-neon .sign h1{animation:neon 1.6s linear 1 both}
+@keyframes neon{
+  0%{opacity:.25;text-shadow:none}
+  8%{opacity:1;text-shadow:0 0 6px #FF6319,0 0 20px #FF6319}
+  12%{opacity:.35;text-shadow:none}
+  18%{opacity:1;text-shadow:0 0 6px #FF6319,0 0 24px #FF6319}
+  24%{opacity:.6}
+  30%,100%{opacity:1;text-shadow:0 0 5px rgba(255,99,25,.75),0 0 18px rgba(255,99,25,.45)}
+}
+.fx-flicker .paper{animation:flick 2.6s linear 1}
+@keyframes flick{
+  0%,9%,13%,31%,35%,61%,66%,100%{filter:none}
+  10%,12%{filter:brightness(.45)}
+  32%,34%{filter:brightness(.65)}
+  62%,65%{filter:brightness(.4)}
+}
+.fx-mist .paper{background-image:radial-gradient(ellipse at 50% 115%,rgba(150,160,170,.3),transparent 62%)}
+
+@media (max-width:560px){
+  .paper{padding:16px 18px 22px}
+  .story p{font-size:19px}
+  .names{grid-template-columns:1fr}
+  .shelf{grid-template-columns:repeat(2,1fr)}
+  .stats{grid-template-columns:1fr 1fr}
+  .status{gap:12px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+<div class="top" id="top" hidden>
+  <div class="status" id="status"></div>
+  <div class="route" id="route" aria-label="Your route"></div>
+</div>
+<main class="wrap" id="app"></main>
+<div class="toast" id="toast" aria-live="polite"></div>
+<div class="doors" id="doors" aria-hidden="true"><div class="door l"></div><div class="door r"></div></div>
+
+<script>
+/*DATA_START*/
+const LINES = {
+  ts:   {name:"Times Square",  c:"#FF6319", fg:"#FFFFFF"},
+  mid:  {name:"Midtown",       c:"#0039A6", fg:"#FFFFFF"},
+  down: {name:"Downtown",      c:"#EE352E", fg:"#FFFFFF"},
+  taxi: {name:"Taxi",          c:"#FCCC0A", fg:"#000000"},
+  park: {name:"Central Park",  c:"#00933C", fg:"#FFFFFF"},
+  fin:  {name:"Grand Central", c:"#B933AD", fg:"#FFFFFF"}
+};
+const ENDINGS = {
+  legend: {name:"Legendary",     c:"#FCCC0A", fg:"#000000"},
+  just:   {name:"Just in time",  c:"#00933C", fg:"#FFFFFF"},
+  late:   {name:"Too late",      c:"#EE352E", fg:"#FFFFFF"},
+  secret: {name:"Secret ending", c:"#B933AD", fg:"#FFFFFF"}
+};
+const CARDS = {
+1:{l:"ts",title:"Times Square, 4:15 pm",fx:"neon",
+text:`Ten minutes ago, you were with your class. Then you stopped to take a selfie with a man in a giant costume – either a bear or a very sad dog, it's hard to say. Now he wants a ten-dollar bill for the photo. And your class is gone.
+
+Your teacher's last words this morning: “Make sure that you are back at the hotel by seven. The bus to the airport won't wait for anyone.”
+
+The name of your hotel? No idea. You only remember three things: there is a tiny deli with a fat orange cat right next door. The hotel is close to a train station with a famous clock. And from your window you could see a silver tower with a pointed top.`,
+opts:[{t:"Escape into the subway before the costume man starts shouting.",to:46},{t:"Jump into one of the yellow cabs at the corner.",to:23},{t:"Pay the ten dollars and ask the costume man for help. He must know the city.",to:48},{t:"Search for your hotel on your phone.",to:14,bat:3}]},
+
+2:{l:"mid",title:"In the back of a police car",
+action:{text:"Both of you: sit up very straight with your hands on your knees until you have finished reading this card."},
+text:`The back seat of a police car is not exactly comfortable. It is hard, it smells of old coffee and there are no handles on the inside of the doors. You ask Officer Ramirez if she can turn on the siren. She can't. Or won't.
+
+People on the sidewalk stare at you as the car drives by. You wave. Your classmates will never believe this.
+
+A few minutes later the car stops in front of a massive building with huge windows. “Grand Central,” says Officer Ramirez. “Good luck, kid. And watch out for pickpockets.”`,
+go:15},
+
+3:{l:"down",title:"The empty car",
+text:`The next car is almost empty. The lights {{flicker|to go on and off very quickly}}. The air smells of wet socks. The only other passenger is a man lying across three seats with a newspaper over his face. At every stop the doors open – and nobody gets in. Nobody.
+
+Suddenly the newspaper moves. The man sits up and stares straight at you. “You look lost, kid,” he says slowly. “Everybody on this train is lost.” Then he lies down again as if nothing had happened.
+
+You bite your lip. Your hands are shaking a little. Get a grip, you tell yourself.`,
+opts:[{t:"Say nothing. Stare at the subway map and stay on until the end of the line.",to:37},{t:"Get off at the next stop. Right now.",to:58}]},
+
+4:{l:"taxi",title:"Cab downtown",
+text:`You tell the driver about the station with the famous clock. “Grand Central,” he says immediately – and drives off as if he were in a car chase. For ten minutes everything goes smoothly. Then you reach the highway along the East River. Red lights. Horns. Nothing moves. The {{meter|a machine in a cab that shows how much the ride costs}} keeps running.
+
+“Rush hour,” the driver remarks calmly. “Could be twenty minutes. Could be two hours. That's New York.”`,
+opts:[{t:"Stay in the cab and wait.",to:15,extra:30},{t:"Call your teacher while you wait.",to:20,bat:4}]},
+
+5:{ending:"just",title:"Just in time",
+text:`You run out of the hotel with your suitcase. The bus is standing in front of the door with its engine running. Your whole class is pressing their faces against the windows. When you climb in, everybody cheers – not in a nice way. Your classmates will tease you all the way to the airport.
+
+Your teacher looks at you for a very long time. Then: “Times Square is a ten-minute walk from here. Ten. Minutes.”
+
+You don't mind. You sit down, put in your earphones and smile. You made it.`},
+
+6:{ending:"legend",title:"Legendary",
+text:`You come down the stairs with your suitcase – and the lobby is quiet. No class. No teacher. No bus. For one terrible second you think they have left without you. Then the receptionist smiles. “Your group? They're not back yet.”
+
+You sit down on the big sofa, put your feet up and wait. Half an hour later the door flies open. Your class comes in, tired and sweaty. Your teacher has a red face and a phone in each hand. “WHERE WERE YOU?”
+
+You look up. “Here. For ages. Where were YOU?”
+
+Your classmates will talk about this moment until graduation. You are on cloud nine.`},
+
+7:{l:"down",title:"Uptown",extra:15,
+action:{text:"Both of you: stand up and hold on to an invisible handle above your head. {{Sway|to move slowly from side to side}} a little at every stop until you have finished reading this card."},
+text:`The train is already full. At every stop, even more people push in. For twenty minutes your nose is almost pressed against a stranger's backpack. Across from you, a man in an expensive suit is eating cereal out of a bowl. Nobody seems to find this strange. The woman next to you is communicating with three different people in three different languages.
+
+Finally a voice announces: “Next stop: Grand Central – 42nd Street.” You have never heard a more beautiful sentence.`,
+go:15},
+
+8:{l:"fin",title:"The block",
+text:`You find two old hotels right next to each other. Both have a doorman in a gray uniform. Both have a red carpet in front of the door. At first sight, you cannot see any difference between them.
+
+Next to the Wexley Hotel, there is a bakery. A sleepy bulldog is lying in the window.
+
+Next to the Carrington Hotel, there is a tiny deli. A fat orange cat is asleep on a pile of newspapers.`,
+opts:[{t:"Go into the Wexley.",to:36},{t:"Go into the Carrington.",to:54}],
+fact:"Many small corner stores in New York – New Yorkers call them delis or bodegas – have their own cat. The cats keep the mice away."},
+
+9:{l:"down",title:"The guide",
+text:`The man laughs. “Sorry, didn't mean to scare you. I do history tours.” He points at a gravestone. “Alexander Hamilton. One of the men who made this country independent. And yes – the guy from the musical. Legendary.” He is very enthusiastic. You get the feeling he could talk about Hamilton until midnight.
+
+When you finally get the chance to bring up your problem, he thinks for a second. “A station with a famous clock? That's Grand Central. Walk to Brooklyn Bridge – City Hall and take the 6 train uptown. Or grab a cab – but at this time of day, good luck. Or …” His eyes light up. “Join my tour! We're just about to walk to Wall Street. It's on the way. Sort of.”`,
+opts:[{t:"Join the tour to Wall Street.",to:49},{t:"Walk to Brooklyn Bridge – City Hall station.",to:17},{t:"Take a cab.",to:4}],
+fact:"Alexander Hamilton, one of the Founding Fathers of the USA, is buried in the cemetery of Trinity Church. Many people today know him from the musical “Hamilton”."},
+
+10:{l:"mid",title:"The Empire State Building",
+text:`Before you can even get into the lobby, you have to go through security. A guard checks your backpack as if you were a spy. Inside, the line for the observation deck goes all the way around the lobby. On the ceiling above you there is a striking golden mural. The ticket costs more than you have spent on food all week.`,
+opts:[{t:"Buy a ticket and wait in line. The view will be worth it.",to:22},{t:"Ask the guard for help instead. He sends you up Fifth Avenue.",to:60}],
+fact:"The Empire State Building opened in 1931 and has 102 stories. Its open-air observation deck is on the 86th floor. There is also an indoor one on the 102nd floor."},
+
+11:{l:"mid",title:"Bryant Park",
+text:`The pigeon lands in a small park behind a huge stone building – right on a chessboard. Two old men look up from their game. The pigeon drops your fry and knocks over three chess pieces.
+
+“I was on top of my game!” one of the men shouts. “I swear, forty years I've been playing here. And now I lose to a pigeon?”
+
+You apologize for the pigeon – even though it isn't really your pigeon. The man waves his hand. “Scram, kid. I have to start all over again.”
+
+You walk around the huge building to find its entrance.`,
+go:21},
+
+12:{l:"mid",title:"42nd Street",
+text:`You walk east along 42nd Street. In Manhattan, a few blocks can feel like a marathon. Cabs honk. Delivery bikes race past. A man tries to sell you a “real gold” watch for twenty dollars. White steam rises out of a hole in the street as if the city were breathing.
+
+On the corner, two teenagers are drumming on upside-down plastic buckets. A crowd is standing around them. Across the street, a food cart smells so good that your stomach starts talking to you.`,
+opts:[{t:"Stop for a minute and watch the drummers.",to:41},{t:"Buy something to eat. You're starving.",to:51}],
+fact:"The steam that comes out of New York's streets is not smoke. It comes from a huge system of underground pipes that heats many buildings in Manhattan."},
+
+13:{l:"mid",title:"Penn Station",
+text:`Penn Station is huge, but it doesn't feel like a famous place at all. Low ceilings, fast food, thousands of people rushing to their trains. You look everywhere for a famous clock. Nothing. You look for a deli with a cat. Nothing – only a pigeon walking around as if it owned the place.
+
+Back outside, you see a very famous building just a few blocks away: the Empire State Building. From the top, you can see the whole city. Maybe even your hotel?`,
+opts:[{t:"Walk to the Empire State Building.",to:10},{t:"Give up and take a cab.",to:23}]},
+
+14:{l:"ts",title:"Search results",
+text:`You type “hotel cat famous clock” into your phone. It thinks for a long time. Then: 2,317 hotels in Manhattan. And 48 videos of cats sitting on clocks. Great. You glance at the first video. Then at the second. It's absolutely hypnotic.
+
+When you finally look up, a pigeon is sitting on the railing next to you, staring at your screen as if it wanted to help. It doesn't.`,
+back:{to:1,close:14},
+fact:"Times Square got its name from a newspaper. In 1904, The New York Times moved into a new tower there and the square was renamed after it."},
+
+15:{l:"fin",title:"Grand Central",
+text:`You step into the main hall of Grand Central Terminal – and stop. The ceiling is so high that it looks like the sky: blue-green with golden stars. Thousands of people are rushing in all directions, but nobody bumps into anybody. You are totally in awe.
+
+In the middle of the hall there is a round information booth. On top of it: a golden clock with four faces. This is it. The station with the famous clock. Your hotel must be very close.`,
+opts:[{t:"Follow the signposts to the exits.",to:56},{t:"Wait under the clock. Maybe your class is looking for you here.",to:34}],
+fact:"Grand Central is one of the major transportation hubs of New York. For more than 100 years, people have met “under the clock”. And the stars on the ceiling? They are painted the wrong way around."},
+
+16:{l:"down",title:"The cemetery",
+text:`The old church is surrounded by skyscrapers, but behind its fence time seems to have stopped. The gravestones are gray and {{crooked|not straight}}. On many of them the names have almost disappeared. Leaves are blowing across the graves. The noise of the city suddenly feels very far away.
+
+Then you notice him. Between the gravestones stands a man in a long dark coat, white {{stockings|thin, tight clothing that covers the legs and feet}} and a strange three-cornered hat. He looks as if he had stepped straight out of the 18th century. Slowly, he turns his head toward you.
+
+“Are you looking for me?”`,
+opts:[{t:"Run!",to:37},{t:"You need courage now. Stay where you are.",to:9}]},
+
+17:{l:"down",title:"Brooklyn Bridge – City Hall",
+text:`You run down the stairs into the station. The green number 6 is everywhere. There are two platforms.
+
+On your side, a train is standing with its doors open. The last passengers are getting out. Nobody is getting in. The train is almost empty. You are exhausted.
+
+On the other side of the tracks, the platform is packed with people waiting for the train uptown.`,
+opts:[{t:"Jump into the empty train before the doors close.",to:55},{t:"Take the stairs to the other platform and wait for the train uptown.",to:7}]},
+
+18:{l:"mid",title:"Officer Ramirez",
+text:`A police officer comes running. “Police! Nobody move!” she orders. The construction worker releases the pickpocket – right into her hands. “Ma'am, is this your wallet?”
+
+The woman with the red bag has tears in her eyes. “Thank you, darling. Thank goodness you were here.” She opens her wallet and shows you photos of all seven of her grandchildren. One by one.
+
+The officer – her name tag says RAMIREZ – turns to you. “That took courage, kid. Where are you headed?” When you tell her about the station with the famous clock, she smiles. “Grand Central? Hop in. It's on my way.”`,
+go:2,goLabel:"Get in the car"},
+
+19:{l:"park",title:"Dog chaos",
+action:{text:"Both of you: run on the spot for ten seconds – as fast as you can.",timer:10},
+text:`Nine dogs, nine {{leashes|long straps that you use to hold a dog}}, all pulling in different directions. Out of the park, across Fifth Avenue, past fancy stores and a doorman who jumps out of the way. A delivery bike nearly crashes into the tiny dog in the raincoat. A squirrel appears. Total chaos.
+
+Then, suddenly, the dogs stop. In front of you is a massive building with huge windows. “Grand Central,” says the dog walker, out of breath. “The cat is somewhere around here. I can't go any closer – the dogs would lose their minds.”`,
+go:15},
+
+20:{l:"taxi",title:"The call",
+text:`The phone rings. And rings. Then your teacher's voice: “Hi, you've reached my voicemail. I'm on a school trip in New York, so please only contact me in an emergency. Thank you!”
+
+Beep.
+
+“Sorry. The mailbox is full.”
+
+You stare at your phone. This IS an emergency.`,
+back:"prev"},
+
+21:{l:"mid",title:"The lions",
+text:`Two huge stone lions guard the steps of the New York Public Library. People sit on the steps, eat sandwiches and hang out in the afternoon sun. A guy in a suit is reading a newspaper – a real one, made of paper.`,
+opts:[{t:"Ask the guy in the suit if he knows a station with a famous clock. Without looking up, he points east: “Grand Central. Two blocks. Everybody knows that.”",to:15},{t:"Take a quick selfie with one of the lions first.",to:26,bat:1}],
+fact:"The two lions in front of the library have names: Patience and Fortitude."},
+
+22:{l:"mid",title:"The elevator",extra:20,
+action:{text:"Both of you: {{squat|to bend your knees and go down low}} down. Then stand up slowly and stretch your arms up high while you count to ten.",timer:10},
+text:`After what feels like forever in line, you finally step into the elevator. The doors close. The elevator shoots up so fast that your stomach stays on the ground floor. A little boy next to you screams with joy. His dad screams too – but not with joy.
+
+What a thrill! On the 80th floor you change elevators and ride on to the 86th floor.`,
+go:30},
+
+23:{l:"taxi",title:"Yellow cab",batAuto:2,batOnce:true,
+text:`The cab smells of air freshener and old coffee. The driver doesn't stop talking: about the traffic, the weather, his cousin in New Jersey and why pizza in Chicago is “not real pizza”. A charging cable is hanging from the back of his seat. You plug in your phone.
+
+“So, where to?” You explain: a hotel, a cat, a station with a famous clock. The driver looks at you in the mirror. “Kid. I need a name.”`,
+opts:[{t:"“Grand Central!”",to:40},{t:"“Penn Station!”",to:13},{t:"“I don't know. Just drive around – I'll recognize it when I see it.”",to:33}]},
+
+24:{l:"taxi",title:"On location",
+action:{text:"Freeze! Neither of you moves while the reader reads this card."},
+text:`You walk around the corner and straight into a film set. Bright lights. Cameras. A woman with a headset. In the middle of the street, two actors are arguing in front of a fake coffee shop. New York is the perfect backdrop for a TV series.
+
+“CUT!” someone yells. Everybody looks at you. You are standing right in the middle of the shot.
+
+The director walks over. You expect him to shout. Instead he looks at you curiously. “The confused face. The backpack. Perfect! Walk through the scene one more time – exactly like that.” Ten seconds later you are part of a TV series. Nobody at home will ever believe you.
+
+Then you continue along 42nd Street.`,
+go:12,
+fact:"New York is one of the most popular film locations in the world. On many days, film crews are shooting somewhere in the city."},
+
+25:{l:"fin",title:"Lexington Avenue",
+text:`You step out onto Lexington Avenue. The silver tower with the pointed top is right above you. You are close – you can feel it.
+
+A delivery bike races around the corner and misses you by an inch. You need a moment. And a cookie. So you walk into the nearest deli.
+
+The owner runs the store with his wife. He was born in Greece and emigrated forty years ago. “My roots are in Greece, but my heart is in New York,” he says. The walls are covered in old baseball memorabilia. You ask for a cookie and a bag of crisps. He looks confused. “You mean chips?”
+
+When you mention the fat orange cat, he laughs. “Oh, you mean Mr. Biscuit! One block that way. Everybody knows Mr. Biscuit.”`,
+go:8},
+
+26:{l:"mid",title:"The photographer",extra:10,batAuto:4,
+text:`Before you can take your photo, a family of tourists in matching T-shirts stops you. “Excuse me, honey – would you mind taking a picture of us? We're on vacation from Texas!” You agree. Big mistake. “Come on, folks, one more!” the dad shouts. And one more. “Now one where we all jump!” Twenty-three photos later he is finally happy.
+
+To say thank you, the mother lends you her power bank for ten minutes. When you ask about a station with a famous clock, she laughs. “Oh my! Grand Central? We were just there. It's that way!”`,
+go:15},
+
+27:{ending:"secret",title:"Broadway",
+text:`Five years later. A packed theater on Broadway. The lights go down. The audience goes silent. Then you step onto the stage.
+
+The show is a huge success. Afterward, people stand and clap for ten minutes. In the third row you see a familiar face: your old English teacher. When you glance at each other, your teacher shakes their head – and then starts clapping, too.
+
+You never made it to the bus. You never made it back to Germany. But you made it on Broadway.`},
+
+28:{l:"down",title:"Face to face",
+text:`The light of your flashlight hits a face – a train conductor. He is holding a half-eaten bagel and blinks into the light. “Kid, what are you doing here?” he says with his mouth full. “This train turns around here and goes back uptown. You're lucky – most people never see this place.”
+
+You tell him everything: the selfie, the class, the clock. He shakes his head. “Grand Central? Just stay on. It's on the way. And don't touch anything.”`,
+go:7,
+fact:"You have just seen the old City Hall station. Many people say it is the most beautiful station in New York. It closed in 1945, but the 6 train still drives through it every day to turn around."},
+
+29:{l:"down",title:"Eyes closed",
+action:{text:"Both of you: close your eyes and count to ten out loud together. Then read on.",timer:10},
+text:`One. Two. Three. The train screeches. Four. Five. Something cold touches your hand. Six. Seven. Eight. The lights go out. Nine. Ten.
+
+You open your eyes. You are standing on the platform at Brooklyn Bridge – City Hall. The train is gone. The platform is empty. Silent.
+
+In your hand there is a small old metal coin: a subway {{token|a small metal coin that people used to pay for the subway until 2003}}. You have no idea how it got there.`,
+back:{to:17,close:55}},
+
+30:{l:"mid",title:"The observation deck",
+text:`86th floor. Outside, the wind almost knocks you over. Below you lies the whole city: yellow dots that are cabs, a long green rectangle that is Central Park. Far away in the water, tiny and green: the Statue of Liberty. You are in awe.
+
+Then you see it. A silver tower with a pointed top, shining in the late afternoon sun. Wait – you know that tower! You saw it this morning from your hotel window while you were brushing your teeth.`,
+opts:[{t:"Take the elevator down and walk toward the silver tower.",to:15},{t:"Take a quick photo of the view first.",to:26,bat:1}],
+fact:"The silver tower is the Chrysler Building. It stands right next to Grand Central."},
+
+31:{l:"mid",title:"Stop, thief!",
+text:`Your cry for help is so loud that half the street turns around. The guy in the gray hoodie starts running – straight into a delivery bike. Wallet, bike and thief crash onto the sidewalk. Before he can get up, a huge construction worker holds him by the hoodie. “Going somewhere, buddy?”
+
+“I didn't do anything!” the pickpocket shouts. He looks very guilty. The wallet sticking out of his pocket gives him away.
+
+The woman with the red bag walks over, still shaking.`,
+opts:[{t:"Stay and wait for the police.",to:18},{t:"Walk away. You don't have time for this.",to:21}]},
+
+32:{l:"down",title:"Showtime",extra:10,
+action:{text:"Both of you: show your best dance move for five seconds.",timer:5,after:0},
+text:`The train is packed. You squeeze in between a man with a huge backpack and a woman eating noodles. The doors close. Then someone shouts: “Ladies and gentlemen, it's showtime!”
+
+Three teenagers turn on music. They spin around the metal poles, flip upside down and almost walk on the ceiling. A sneaker flies past your nose – just inches away. Everyone else in the {{car|one of the parts of a train that people sit in}} keeps looking at their phones as if this happened every day. It probably does.`,
+opts:[{t:"Enjoy the show. Give one of the dancers a dollar and ask him for help.",to:53},{t:"You can't stand the noise. Move into the next car.",to:3}]},
+
+33:{l:"taxi",title:"New Jersey",extra:45,
+text:`The driver nods and turns left. Then right. Then into a long, bright tunnel that never seems to end. When you finally come out, the skyline of Manhattan is behind you – on the other side of a wide river. A sign says: WELCOME TO NEW JERSEY.
+
+“Beautiful, right?” says the driver. “My cousin lives around here. Want to say hi?” You don't. The trip back costs you a lot of money.`,
+back:{to:23,close:33},
+fact:"The Lincoln Tunnel runs under the Hudson River. It connects Manhattan with New Jersey – which is not just another part of the city but a different state."},
+
+34:{l:"fin",title:"Under the clock",extra:15,
+action:{text:"Clap for the happy couple – quietly!",after:0},
+text:`You wait. Ten minutes. Fifteen. Thousands of people rush past you – but not your class. Then the guy next to you suddenly goes down on one knee in front of his girlfriend. She screams. Half the hall starts clapping.
+
+It's a bit awkward to cry at a stranger's {{proposal|when someone asks another person to marry them}}, but you almost do. The woman in the information booth has watched the whole thing. She leans out of her window. “You look lost, sweetheart.” You tell her about the hotel with the cat. “An orange cat next to a deli? Try Lexington Avenue. Out that door, then ask around.”`,
+go:25},
+
+35:{l:"mid",title:"Two seconds",
+text:`On the sidewalk in front of you walks an {{elderly|old}} woman with a big red bag. She is holding her phone tightly in one hand and a coffee in the other. Her bag is wide open. Right behind her: a guy in a gray hoodie and bright yellow sneakers. He seems relaxed. Too relaxed.
+
+Then you see it. He reaches into her bag, slips her wallet out and puts it into his own pocket. It takes two seconds. The woman doesn't notice anything. Nobody does. Only you.`,
+opts:[{t:"Shout: “Stop! Thief!”",to:31},{t:"Look away. It's not your business – and you are in a hurry.",to:21}]},
+
+36:{l:"fin",title:"The Wexley",extra:10,
+text:`The lobby of the Wexley is full of people in expensive clothing. A sign at the door says: PRIVATE PARTY. A wedding. Someone hands you a glass of orange juice and asks if you are the bride's cousin from Germany. You are about to explain when the receptionist looks at you over her glasses. “A school group? From Germany? Not here, honey.” Security walks you out – very politely.
+
+Outside, the bulldog in the bakery window watches you. It looks as if it knew the whole time.`,
+back:{to:8,close:36}},
+
+37:{l:"down",title:"The ferry terminal",
+text:`You end up at the southern tip of Manhattan, in front of a large building by the water. Big orange boats are coming and going. A sign says: STATEN ISLAND FERRY – FREE. Hundreds of people are streaming on board. A little boy next to you is jumping up and down: “We're gonna see the Statue of Liberty!”
+
+You're tired. You're dying to sit down. A free boat ride with a view sounds very, very tempting.`,
+opts:[{t:"Get on the ferry. You deserve a break.",to:45},{t:"Walk back into the city.",to:58},{t:"Take one of the yellow cabs waiting outside the terminal.",to:4}]},
+
+38:{l:"park",title:"The audition",
+action:{text:"The reader says this line out loud – with feeling: “Ladies and gentlemen … the show must go on!”",after:0,loud:true},
+text:`The theater is dark and smells of dust. Before you can say anything, a woman with a clipboard grabs your arm: “You! You're late! On stage, now!” Dave's mouth falls open. Suddenly you are standing in the spotlight. Someone hands you a piece of paper with one line on it. You are all shy, but you take a deep breath.
+
+Silence. Then the woman starts clapping. “Exceptional! What confidence! You've got the part. {{Rehearsals|practice sessions before a show}} start on Monday.”
+
+Dave didn't get the part. He is a little jealous, but he still wants to help you.`,
+opts:[{t:"Accept the part. Who needs a bus?",to:27},{t:"Politely say no. Dave walks you to Central Park.",to:57,extra:20}]},
+
+39:{l:"fin",title:"The restroom",extra:10,
+action:{text:"Both of you: stand up and cross your legs until you have finished reading this card.",after:0},
+text:`You ask a security guard where the toilet is. He looks at you as if you had said something rude. “You mean the restroom?” He points to a line of about forty people. It moves very, very slowly.
+
+Ten minutes later you feel like a new person. You also realize that Americans say “restroom” although nobody rests there.`,
+back:{to:56,close:39}},
+
+40:{l:"taxi",title:"Traffic",extra:10,
+text:`The cab turns onto 42nd Street – and stops. In front of you: a delivery truck, a police car with flashing lights and about a hundred honking cabs. Somewhere ahead, a film crew has closed the street. The {{meter|a machine in a cab that shows how much the ride costs}} keeps running. A man walks between the cars selling bottles of water.
+
+The driver sighs. “It's only a few blocks, kid. You'd be faster on foot. Just saying.”`,
+opts:[{t:"Pay and walk the rest of the way.",to:24},{t:"Ask the driver if he knows a shortcut.",to:33},{t:"Call your teacher while you wait.",to:20,bat:4}]},
+
+41:{l:"mid",title:"The drummers",
+action:{text:"Drum a beat on the table together for five seconds.",timer:5},
+text:`The two teenagers are unbelievable. They play the buckets like real drums – fast, loud, perfectly together. The crowd goes wild. One of them winks at you, throws a drumstick into the air and catches it behind his back.
+
+Then someone bumps into you from behind. “Sorry,” a voice mumbles. When you turn around, you only see a gray hoodie and bright yellow sneakers disappearing into the crowd. You check your pockets. Nothing is missing. Phew. But you are curious – and you follow the yellow sneakers.`,
+go:35},
+
+42:{l:"park",title:"The dog walker",
+text:`Out of the mist comes a man. And nine dogs. Big dogs, small dogs, one tiny dog in a yellow raincoat. The heavy breathing belongs to an old bulldog that is clearly not a fan of exercise.
+
+“Hey, you okay?” the man asks. “You look like you've seen a ghost.”
+
+You tell him about your hotel. He listens and nods. “Station with a famous clock? That's Grand Central. Come on, I'll take you under my wing. We're going that way anyway.” He whistles. The dogs get up. All nine of them.`,
+go:19},
+
+43:{ending:"late",title:"Too late",
+text:`You run out of the hotel with your suitcase – just in time to see the back of the bus disappear around the corner. Gone.
+
+You sit down on the sidewalk. Then someone sits down next to you. It's your teacher. Your teacher stayed behind – for you. For a long time, nobody says anything. Then: “We're taking a cab to the airport. You're paying.”
+
+Your classmates will tease you about this until graduation.`},
+
+44:{l:"down",title:"Chinatown",extra:10,
+text:`The “shortcut” leads you straight into Chinatown. The streets are narrow and vibrant. Red lanterns hang above your head. There are numerous stores selling everything from dried fish to phone cases. On one single block you hear at least four different languages.
+
+An old woman in a tiny bakery gives you a free {{egg tart|a small pastry filled with a sweet egg cream}}. “You look hungry,” she says. She was born in Hong Kong and has run this bakery for thirty years. “New York is my home. But you can taste my heritage in every tart.” When you ask for directions, she points to a subway entrance: “Canal Street. Take the 6 uptown.”`,
+go:7,
+fact:"New York is one of the most multicultural cities in the world. More than a third of all New Yorkers were born in another country."},
+
+45:{l:"down",title:"Staten Island",extra:45,
+action:{text:"Both of you: stand up and strike the Statue of Liberty pose – one arm up high, holding an invisible torch.",timer:10},
+text:`The ride is awesome. The wind blows through your hair, seagulls scream above you and the Statue of Liberty slowly passes by – green, huge and much more impressive than on any postcard. For twenty-five minutes you forget all your problems.
+
+Then a voice announces: “Ladies and gentlemen, welcome to Staten Island.” Everybody gets off. You look at the map on the wall. Staten Island is not Manhattan. It is a completely different borough. Your hotel is definitely not here.
+
+You take the next ferry back. That was a very scenic mistake.`,
+back:{to:37,close:45},
+fact:"New York City has five boroughs: Manhattan, Brooklyn, Queens, the Bronx and Staten Island. The Staten Island Ferry has been free since 1997."},
+
+46:{l:"ts",title:"Under Times Square",
+text:`The subway station under Times Square is a maze of its own: endless tunnels, steep stairs, hot air that smells of old pizza. On the stairs, a rat is dragging a whole slice down the steps. Three tourists are filming it. It is the most confident creature you have seen all day.
+
+Next to you, a signpost says: S – SHUTTLE TO GRAND CENTRAL. Someone has taped a piece of paper over it: NO SERVICE THIS WEEKEND. SORRY.
+
+Grand Central … Penn Station … Wasn't one of them the station with the famous clock?`,
+opts:[{t:"Forget the stations. Jump on the downtown train that is just arriving.",to:32},{t:"Go back up and walk to Grand Central.",to:12},{t:"Go back up and walk to Penn Station.",to:13}]},
+
+47:{l:"park",title:"The mist",fx:"mist",
+text:`The path gets narrower. The trees get thicker. It's early fall and the first yellow leaves crunch under your sneakers. The noise of the city disappears until all you can hear is your own breathing. Mist rises from a small lake and hangs between the trees. The sun disappears behind the rocks.
+
+Then you hear it. Footsteps behind you. Lots of footsteps – far too many for one person. And heavy, wet breathing. Something is coming closer. Fast.`,
+opts:[{t:"Run!",to:59},{t:"Stand still. Whatever it is, you are not running away.",to:42}]},
+
+48:{l:"park",title:"Dave",
+text:`You pay. The costume man takes off his giant head. Underneath is a sweaty guy with a friendly face. “I'm Dave. From Ohio. Actor.” At first he is a bit shy, but then he opens up: he came to New York ten years ago with one suitcase and a big dream. “Not that it has worked out yet,” he admits.
+
+When you tell him about your hotel, he is very enthusiastic. “A hotel with a cat? Trust me, I know every cat in Manhattan. Upper East Side. Definitely. We'll walk through the park.” Then he looks at his watch. “Gosh, my audition! It's just around the corner. Come with me – it'll only take five minutes. I insist!”`,
+opts:[{t:"Ask Dave to just show you the way to the park.",to:57},{t:"Go with Dave to his audition first.",to:38}]},
+
+49:{l:"down",title:"Wall Street",extra:10,
+text:`The tour guide stops in front of a building with huge {{columns|tall stone pillars that hold up a roof}} and a statue of George Washington. “To kick things off, ladies and gentlemen – this is where the story of the United States of America really began!” Around you, wealthy-looking people in fancy suits rush past with coffee cups and phones. Nobody looks at George.
+
+The guide talks and talks. Settlers. The Dutch. A wall. It's fascinating – for the first five minutes. After what feels like an hour you glance at your phone. The guide notices. “OK, let me wrap up. If you're in a hurry, take my shortcut through Chinatown. Well – it's not really shorter. But it's more fun.”`,
+opts:[{t:"Leave the tour and walk to Brooklyn Bridge – City Hall station.",to:17},{t:"Take the guide's “shortcut” through Chinatown.",to:44}],
+fact:"Wall Street got its name from a wall that Dutch settlers built there. The Dutch called their town New Amsterdam. In 1664 the English took it over and it adopted a new name: New York. In 1789, George Washington became the first president of the United States right here."},
+
+50:{l:"down",title:"The memorial",
+text:`The crowd is standing around a huge square pool. Water runs down all four sides and crashes into a dark hole in the middle. You cannot see the bottom. There are two of these pools. They stand exactly where the Twin Towers used to be.
+
+Around the pools, thousands of names are cut into dark metal. On one of the names, someone has placed a white rose. A man slowly moves his finger along the letters. Nobody here is taking selfies. You decide not to take a photo either.
+
+A security guard notices you. When you tell him that you are lost, he answers quietly: “Grand Central? Walk to Brooklyn Bridge – City Hall and take the 6 uptown. About ten minutes from here. The ferry is down by the water – but that's the wrong direction.”`,
+opts:[{t:"Walk to Brooklyn Bridge – City Hall station.",to:17},{t:"Walk down to the ferry.",to:37}],
+fact:"On September 11, 2001, terrorists crashed two planes into the Twin Towers of the World Trade Center. Both towers collapsed. Nearly 3,000 people died in the attacks that day. On the birthday of each person named here, a white rose is placed on their name."},
+
+51:{l:"mid",title:"The food cart",extra:10,batAuto:-1,
+action:{text:"One of you gets up and walks like a pigeon once around your table.",after:1},
+text:`The man at the food cart smiles. “What can I get you?” You are dying to eat something salty. “Chips, please.” He hands you a small bag of potato chips. Not what you meant. You try again: “Fries?” – “Regular or large?” – “Regular.” Finally.
+
+You take one bite. Then something gray shoots out of nowhere. A pigeon lands on your arm, grabs the longest fry and flies off with it. Seconds later it comes back for another one. You run after it – filming everything on your phone, of course.`,
+go:11},
+
+52:{l:"mid",title:"A classy hotel",extra:10,
+text:`You walk into a very classy hotel. This is some place! Marble floors, golden elevators, flowers everywhere. The interior design alone probably cost more than your whole school. In the dining area, wealthy guests are drinking tea from tiny cups.
+
+For a second you think: maybe this is your hotel? Then you remember: your hotel had a broken vending machine and a carpet with a coffee stain.
+
+A man from security walks over. He is very polite – and very clear. “May I help you? No? Then I'm sure you'll find the exit.”`,
+back:"prev"},
+
+53:{l:"down",title:"The dancer",
+text:`The dancer looks at your dollar. Then at you. “One dollar? After a backflip?” He grins and takes it anyway. When you tell him about the station with the famous clock, he laughs. “That's Grand Central! And you're going the wrong way. This train goes downtown.”
+
+He has a suggestion: “Get off at WTC Cortlandt. Walk to Brooklyn Bridge – City Hall and take the 6 uptown. It stops right at Grand Central.”`,
+opts:[{t:"Take his advice and get off at WTC Cortlandt.",to:58},{t:"Too complicated. Stay on the train until the end of the line.",to:37}]},
+
+54:{l:"fin",title:"The Carrington",
+action:{text:"Both of you: run on the spot and count the floors out loud – from 1 to 8.",after:1},
+text:`The doorman opens the door for you. The lobby looks exactly like this morning. You have never been so happy to see an ugly carpet.
+
+Then you realize: your suitcase is still in your room. Eighth floor. And the elevator has a sign on it: OUT OF ORDER. You bite the bullet and take the stairs.
+
+Out of breath, you grab your suitcase and run back down. Now check your clock.`,
+opts:[{t:"5:45 pm or earlier",to:6,tmax:1065},{t:"5:50 pm to 7:00 pm",to:5,tmin:1070,tmax:1140},{t:"Later than 7:00 pm",to:43,tmin:1145}]},
+
+55:{l:"down",title:"The last stop?",fx:"flicker",voice:"whisper",
+action:{text:"The reader reads this card in a whisper."},
+text:`You drop onto a seat. A voice says something through the speakers – it sounds like “bzzz … last stop … bzzz”. The doors close. The train moves on. Slowly. Without passengers.
+
+The lights {{flicker|to go on and off very quickly}}. Then the train rolls into a station you have never seen before: beautiful old tiles, old lamps, glass windows in the ceiling. Nobody is waiting on the platform. There are no signs. It is completely silent.
+
+In the dark window next to you, you see your own face. And behind it – only inches away – another face.`,
+opts:[{t:"Turn on your phone's flashlight and turn around.",to:28,bat:2},{t:"Close your eyes.",to:29}]},
+
+56:{l:"fin",title:"The exits",
+text:`Grand Central is huge. Signs everywhere: PARK AVENUE. LEXINGTON AVENUE. VANDERBILT AVENUE. 42ND STREET. A family is arguing in Spanish about which way to go. You know exactly how they feel.
+
+Through the glass doors on one side, you can see a silver tower with a pointed top. It looks strangely familiar.`,
+opts:[{t:"Follow the signs to Lexington Avenue.",to:25},{t:"Follow the signs to Park Avenue.",to:52},{t:"You need a restroom first. Urgently.",to:39}]},
+
+57:{l:"park",title:"Central Park",
+text:`Dave takes you to the corner of Central Park, points into the green and says: “Just walk straight through. Your hotel is on the other side. I'm almost sure.” Then he hugs you and runs off to his next job.
+
+Central Park is enormous. Joggers, cyclists, horse carriages, a man playing the saxophone under a stone bridge. Squirrels everywhere – fat ones that don't seem to be afraid of anything. It's beautiful. It's also very, very big.`,
+opts:[{t:"Follow one of the small paths deeper into the park.",to:47},{t:"Climb over the low metal railing and take a shortcut across the rocks.",to:59},{t:"Check your phone's map and walk down Fifth Avenue instead.",to:60,bat:2}],
+fact:"Central Park looks like nature, but it is almost completely man-made. Its lakes, meadows and hills were planned by designers and built in the 19th century."},
+
+58:{l:"down",title:"Downtown",
+text:`Lower Manhattan, the oldest part of the city. The streets here are narrower and don't follow the neat grid of Midtown. Glass towers rise above you – the tallest one is One World Trade Center. Compared to Times Square it is strangely quiet.
+
+To your left, you hear the sound of falling water and see a crowd of people. Straight ahead, between two skyscrapers, there is an old church with a small cemetery.`,
+opts:[{t:"Follow the crowd toward the sound of the water.",to:50},{t:"Walk over to the old church.",to:16},{t:"Use your phone to find the fastest way to Grand Central.",to:17,bat:2}]},
+
+59:{l:"park",title:"The railing",extra:10,
+text:`One second later you are on the wrong side of a low metal railing – right in the middle of a flower bed. Behind you, a horse snorts. A police officer on a huge brown horse is looking down at you.
+
+“You know you're not allowed in there, right? I could arrest you for that.” Your hands start shaking. She grins. “Just kidding. Mostly.” With a clear gesture she orders you back onto the path – all the way back to where you started.`,
+back:{to:57,close:59}},
+
+60:{l:"mid",title:"Fifth Avenue",
+text:`Fifth Avenue is where New York shows off. High-end stores, windows full of expensive clothing, doormen in white gloves. A woman walks past with a tiny dog in a designer bag. Everybody here seems wealthy – except you.
+
+Then you notice a really classy hotel with golden doors. Maybe someone in there can help you?`,
+opts:[{t:"Keep walking along Fifth Avenue.",to:35},{t:"Go into the classy hotel and ask for help.",to:52}]}
+};
+/*DATA_END*/
+
+const START_T = 975;       // 4:15 pm in minutes
+const START_BAT = 7;
+const PIN = "1664";
+const KEY_STATE = "nyc-maze-v1-state";
+const KEY_END = "nyc-maze-v1-endings";
+
+const POST_TASKS = [
+  "Your teacher wants an explanation. Record a voice message (max. 90 seconds) in which you tell the story of your afternoon. Your aim: convince your teacher that none of it was your fault. Use the simple past, time connectors (first, then, after that, suddenly, in the end), at least two New York facts and three American English words from the maze.",
+  "Write a new card for the maze (80–100 words): a situation with two options – one funny, one creepy – and one action. Decide where each option leads. Swap cards with another pair and play theirs."
+];
+
+/* ---------- storage ---------- */
+function load(key, fallback){ try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }catch(e){ return fallback; } }
+function store(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+function drop(key){ try{ localStorage.removeItem(key); }catch(e){} }
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const app = $("#app");
+const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function rich(s){ return esc(s).replace(/\{\{([^|}]+)\|([^}]+)\}\}/g, (m,w,d) => `<button type="button" class="gl" data-w="${w}" data-d="${d}">${w}</button>`); }
+function colors(n){
+  const c = CARDS[n];
+  if(c.ending){ const e = ENDINGS[c.ending]; return {c:e.c, fg:e.fg}; }
+  const l = LINES[c.l]; return {c:l.c, fg:l.fg};
+}
+function fmt(t){ const h = Math.floor(t/60), m = t%60; return {hm:`${((h+11)%12)+1}:${String(m).padStart(2,"0")}`, ap: h>=12 ? "pm" : "am"}; }
+function fmtFull(t){ const f = fmt(t); return f.hm + " " + f.ap; }
+function stopHTML(n, now){ const k = colors(n); return `<span class="stop${now?" now":""}" style="background:${k.c};color:${k.fg}" title="${esc(CARDS[n].title)}">${n}</span>`; }
+function routeHTML(log){ return log.map((n,i) => (i ? '<span class="link"></span>' : "") + stopHTML(n, i===log.length-1)).join(""); }
+
+/* ---------- state ---------- */
+let S = null;          // current game
+let view = "start";    // start | game | teacher
+let teacherOpen = false;
+let prevClock = "";
+let timerHandle = null;
+
+function newGame(names, sandboxAt){
+  S = {cur: sandboxAt || 1, t: START_T, bat: START_BAT, log:[sandboxAt || 1], closed:{}, seen:{}, reader:0,
+       names: names, actionDone:false, last:null, sandbox: !!sandboxAt, checkT:null};
+  S.seen[S.cur] = true;
+  if(!S.sandbox) store(KEY_STATE, S);
+  view = "game"; prevClock = "";
+  render();
+}
+function save(){ if(S && !S.sandbox) store(KEY_STATE, S); }
+
+function isClosed(from, to){ return (S.closed[from] || []).includes(to); }
+
+function move(opt){
+  const target = CARDS[opt.to];
+  let extra = 0, batDelta = 0;
+  if(target.ending){
+    S.checkT = S.t;
+  } else {
+    extra = (opt.extra || 0) + (target.extra || 0);
+    S.t += 5 + extra;
+  }
+  batDelta -= (opt.bat || 0);
+  let auto = 0;
+  if(target.batAuto){ if(!(target.batOnce && S.seen[opt.to])) auto = target.batAuto; }
+  batDelta += auto;
+  S.bat = Math.max(0, Math.min(100, S.bat + batDelta));
+  S.seen[opt.to] = true;
+  S.log.push(opt.to);
+  S.cur = opt.to;
+  S.reader = S.reader ? 0 : 1;
+  S.actionDone = false;
+  S.last = {extra, auto, cost: opt.bat || 0, base: target.ending ? 0 : 5};
+  if(target.ending && !S.sandbox){
+    const got = load(KEY_END, []);
+    if(!got.includes(target.ending)){ got.push(target.ending); store(KEY_END, got); }
+  }
+  save();
+  showToast(S.last);
+  transition(render);
+}
+function goBack(){
+  const c = CARDS[S.cur];
+  let to, close;
+  if(c.back === "prev"){ to = S.log[S.log.length-2]; close = S.cur; }
+  else { to = c.back.to; close = c.back.close; }
+  (S.closed[to] = S.closed[to] || []).push(close);
+  move({to});
+}
+
+/* ---------- effects ---------- */
+function transition(cb){
+  if(reduce){ cb(); window.scrollTo(0,0); return; }
+  const d = $("#doors");
+  d.classList.add("shut");
+  setTimeout(() => { cb(); window.scrollTo(0,0); setTimeout(() => d.classList.remove("shut"), 90); }, 340);
+}
+let toastT = null;
+function showToast(last){
+  if(!last) return;
+  const parts = [];
+  if(last.base) parts.push(`<span>+${last.base + last.extra} min</span>`);
+  const net = last.auto - last.cost;
+  if(last.cost) parts.push(`<span class="m">−${last.cost} % battery</span>`);
+  if(last.auto > 0) parts.push(`<span class="p">+${last.auto} % battery</span>`);
+  if(last.auto < 0) parts.push(`<span class="m">${last.auto} % battery</span>`);
+  const t = $("#toast");
+  t.innerHTML = parts.join("");
+  clearTimeout(toastT);
+  setTimeout(() => t.classList.add("show"), reduce ? 0 : 420);
+  toastT = setTimeout(() => t.classList.remove("show"), reduce ? 2200 : 2600);
+}
+
+/* ---------- status ---------- */
+function renderStatus(){
+  const top = $("#top");
+  if(view !== "game"){ top.hidden = true; return; }
+  top.hidden = false;
+  const f = fmt(S.t);
+  const chars = f.hm.split("");
+  const prev = prevClock.padStart(chars.length, " ").split("");
+  const flaps = chars.map((ch,i) => ch === ":" ? '<span class="flap colon">:</span>'
+    : `<span class="flap${prevClock && prev[i] !== ch ? " flip" : ""}">${ch}</span>`).join("");
+  prevClock = f.hm;
+  const b = S.bat;
+  const cls = b <= 2 ? "crit" : b <= 4 ? "low" : "";
+  $("#status").innerHTML = `
+    <div class="clock" aria-label="Time ${fmtFull(S.t)}">${flaps}<span class="ampm">${f.ap}</span></div>
+    <div class="batt ${cls}" aria-label="Battery ${b} percent"><span class="bicon"><i style="width:${Math.min(100,b)}%"></i></span>${b} %</div>
+    <span class="spacer"></span>
+    ${S.sandbox ? '<span class="preview-flag">Vorschau</span><button class="menu" data-act="endpreview">Vorschau beenden</button>'
+                : '<button class="menu" data-act="menu">Menu</button>'}`;
+  const r = $("#route");
+  r.innerHTML = routeHTML(S.log);
+  r.scrollLeft = r.scrollWidth;
+}
+
+/* ---------- card ---------- */
+const VOICE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 9.5a3.5 3.5 0 0 1 0 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+
+function actionHTML(a){
+  const label = a.timer ? `Start ${a.timer} s` : "Done";
+  return `<div class="action" role="group" aria-label="Action">
+    <div class="alabel">Action</div>
+    <p>${rich(a.text)}</p>
+    <button class="abtn" data-act="action" ${S.actionDone ? "disabled" : ""}>${S.actionDone ? "Done ✓" : label}</button>
+  </div>`;
+}
+
+function optionsHTML(c, n){
+  if(c.back){
+    const to = c.back === "prev" ? S.log[S.log.length-2] : c.back.to;
+    const k = colors(to);
+    return `<button class="opt" data-back="1" style="--to:${k.c}"><span class="dot"></span><span>Back to ${esc(CARDS[to].title)}</span><span class="costs"></span>
+      <span class="why">You can't take the same wrong turn twice – that option is now closed.</span></button>`;
+  }
+  if(c.go){
+    const k = colors(c.go);
+    return `<button class="opt" data-to="${c.go}" data-i="-1" style="--to:${k.c}"><span class="dot"></span><span>${esc(c.goLabel || "Continue")}</span><span class="costs"></span></button>`;
+  }
+  return c.opts.map((o,i) => {
+    const k = colors(o.to);
+    let why = "", dis = false, fits = false;
+    if(isClosed(n, o.to)){ dis = true; why = "You tried this already."; }
+    else if(o.bat && S.bat < o.bat){ dis = true; why = "Not enough battery."; }
+    if(o.tmin !== undefined || o.tmax !== undefined){
+      const ok = (o.tmin === undefined || S.t >= o.tmin) && (o.tmax === undefined || S.t <= o.tmax);
+      if(!ok){ dis = true; why = ""; } else fits = true;
+    }
+    const costs = (o.bat ? `<span class="cost bat">−${o.bat} % battery</span>` : "") + (o.extra ? `<span class="cost">+${o.extra} min</span>` : "");
+    return `<button class="opt${fits ? " fits" : ""}" data-i="${i}" style="--to:${k.c}" ${dis ? "disabled" : ""}>
+      <span class="dot"></span><span>${rich(o.t)}</span><span class="costs">${costs}</span>${why ? `<span class="why">${why}</span>` : ""}</button>`;
+  }).join("");
+}
+
+function renderCard(){
+  const n = S.cur, c = CARDS[n];
+  if(c.ending) return renderEnding();
+  const k = colors(n);
+  const reader = S.names[S.reader] || (S.reader ? "Partner 2" : "Partner 1");
+  const voice = c.voice === "whisper" ? '<span class="voice whisper">' + VOICE_SVG + 'Whisper</span>' : '<span class="voice">' + VOICE_SVG + 'Quiet voice</span>';
+  const chips = [];
+  if(S.last && S.log.length > 1){
+    if(S.last.extra) chips.push(`<span class="chip">This took longer: +${S.last.extra} min</span>`);
+    if(S.last.auto > 0) chips.push(`<span class="chip plus">+${S.last.auto} % battery</span>`);
+    if(S.last.auto < 0) chips.push(`<span class="chip minus">${S.last.auto} % battery</span>`);
+  }
+  const paras = c.text.split(/\n\s*\n/);
+  const a = c.action;
+  const after = a && a.after !== undefined ? a.after : -1;
+  let story = "";
+  if(a && after === -1) story += actionHTML(a);
+  paras.forEach((p,i) => { story += `<p>${rich(p)}</p>`; if(a && after === i) story += actionHTML(a); });
+  const needAction = a && !S.actionDone;
+  app.innerHTML = `
+  <article class="card fx-${c.fx || "none"}" style="--line:${k.c};--lineFg:${k.fg}">
+    <header class="sign"><span class="bullet">${n}</span><h1>${esc(c.title)}</h1></header>
+    <div class="paper">
+      <div class="meta"><span>Reader: <b>${esc(reader)}</b></span>${voice}</div>
+      ${chips.length ? `<div class="chips">${chips.join("")}</div>` : ""}
+      <div class="story">${story}</div>
+      ${c.fact ? `<details class="fact"><summary>Did you know?</summary><p>${rich(c.fact)}</p></details>` : ""}
+      ${needAction ? '<p class="lockhint">Do the action first – then you can choose.</p>' : ""}
+      <div class="opts${needAction ? " locked" : ""}" id="opts">${optionsHTML(c, n)}</div>
+    </div>
+  </article>`;
+}
+
+/* ---------- ending ---------- */
+function shelfHTML(){
+  const got = load(KEY_END, []);
+  return `<div class="shelf">` + Object.keys(ENDINGS).map(key => {
+    const e = ENDINGS[key], has = got.includes(key);
+    const name = has || key !== "secret" ? e.name : "?";
+    return `<div class="slot${has ? " got" : ""}" style="--ec:${e.c};--efg:${e.fg}">${esc(name)}<small>${has ? "Found" : "Not found yet"}</small></div>`;
+  }).join("") + `</div>`;
+}
+function renderEnding(){
+  const n = S.cur, c = CARDS[n], e = ENDINGS[c.ending];
+  const arrived = S.checkT !== null ? S.checkT : S.t;
+  const got = load(KEY_END, []).length;
+  app.innerHTML = `
+  <article class="card ending" style="--line:${e.c};--lineFg:${e.fg}">
+    <header class="sign"><span class="bullet">${n}</span><h1>${esc(e.name)}</h1></header>
+    <div class="paper">
+      <div class="story">${c.text.split(/\n\s*\n/).map(p => `<p>${rich(p)}</p>`).join("")}</div>
+      <div class="stats">
+        <div class="stat"><b>${fmtFull(arrived)}</b><span>${c.ending === "secret" ? "Time on stage" : "Time at the hotel"}</span></div>
+        <div class="stat"><b>${S.log.length}</b><span>Cards on your route</span></div>
+        <div class="stat"><b>${S.bat} %</b><span>Battery left</span></div>
+      </div>
+      <h2>Your route</h2>
+      <div class="endroute">${routeHTML(S.log)}</div>
+      <h2>Endings found on this device: ${got} of 4</h2>
+      ${shelfHTML()}
+      <h2>After the maze</h2>
+      <ol class="tasks">${POST_TASKS.map(t => `<li>${esc(t)}</li>`).join("")}</ol>
+      <div class="cta">
+        ${S.sandbox ? '<button class="btn" data-act="endpreview">Vorschau beenden</button>'
+                    : '<button class="btn" data-act="again">Play again</button><button class="btn alt" data-act="home">Start screen</button>'}
+      </div>
+    </div>
+  </article>`;
+  if(!S.sandbox) drop(KEY_STATE);
+}
+
+/* ---------- start ---------- */
+function renderStart(){
+  const saved = load(KEY_STATE, null);
+  const canContinue = saved && CARDS[saved.cur] && !CARDS[saved.cur].ending;
+  const names = (canContinue ? saved.names : load("nyc-maze-v1-names", ["",""])) || ["",""];
+  const got = load(KEY_END, []).length;
+  app.innerHTML = `
+  <article class="card" style="--line:#FF6319;--lineFg:#fff">
+    <header class="sign hero">
+      <div class="lines" aria-hidden="true">${Object.values(LINES).map(l => `<span style="background:${l.c}"></span>`).join("")}</div>
+      <h1>Lost in New York</h1>
+    </header>
+    <div class="paper">
+      <h2>How to play</h2>
+      <ul class="rules">
+        <li>Play with your partner on one phone or tablet. Sit next to each other.</li>
+        <li>Take turns reading the cards aloud. Use a quiet voice – only your partner should hear you. The app shows whose turn it is.</li>
+        <li>Talk about your options and only tap when you both agree. Can't agree? Play rock, paper, scissors.</li>
+        <li>Your clock starts at 4:15 pm. Every card adds 5 minutes. Some cards take longer.</li>
+        <li>Your battery starts at 7 %. Some options cost battery. When it's too low, you can't choose them.</li>
+        <li>When a card shows an action, do it together – right away.</li>
+        <li>Tap the underlined words to see what they mean.</li>
+        <li>There are four endings. One of them is secret.</li>
+      </ul>
+      <h2>Who is playing?</h2>
+      <div class="names">
+        <label>Partner 1<input id="n1" autocomplete="off" maxlength="20" value="${esc(names[0] || "")}"></label>
+        <label>Partner 2<input id="n2" autocomplete="off" maxlength="20" value="${esc(names[1] || "")}"></label>
+      </div>
+      <div class="cta">
+        ${canContinue ? `<button class="btn" data-act="continue">Continue at card ${saved.cur}</button><button class="btn alt" data-act="start">Start a new game</button>`
+                      : `<button class="btn" data-act="start">Start the game</button>`}
+      </div>
+      <h2>Endings found on this device: ${got} of 4</h2>
+      ${shelfHTML()}
+      <button class="tlink" data-act="teacher">Teacher view</button>
+    </div>
+  </article>`;
+}
+
+/* ---------- teacher ---------- */
+function exitsOf(c){
+  if(c.opts) return c.opts.map(o => o.to);
+  if(c.go) return [c.go];
+  if(c.back === "prev") return [];
+  if(c.back) return [c.back.to];
+  return [];
+}
+function renderTeacher(){
+  if(!teacherOpen){
+    app.innerHTML = `
+    <article class="card" style="--line:#000;--lineFg:#fff">
+      <header class="sign"><h1>Lehreransicht</h1></header>
+      <div class="paper">
+        <p class="note">Hier siehst du alle Karten mit ihren Verzweigungen. Bitte PIN eingeben.</p>
+        <div class="pin"><input id="pin" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN"><button class="small" data-act="pin">Öffnen</button></div>
+        <div class="cta"><button class="btn alt" data-act="home">Zurück</button></div>
+      </div>
+    </article>`;
+    setTimeout(() => { const p = $("#pin"); if(p) p.focus(); }, 50);
+    return;
+  }
+  const rows = Object.keys(CARDS).map(Number).sort((a,b) => a-b).map(n => {
+    const c = CARDS[n];
+    const where = c.ending ? "Ende: " + ENDINGS[c.ending].name : LINES[c.l].name;
+    const ex = exitsOf(c).map(t => stopHTML(t)).join("");
+    const extras = [];
+    if(c.extra) extras.push("+" + c.extra + " min");
+    if(c.batAuto) extras.push((c.batAuto > 0 ? "+" : "") + c.batAuto + " % Akku" + (c.batOnce ? " (nur 1×)" : ""));
+    if(c.action) extras.push("ACTION");
+    if(c.back === "prev") extras.push("zurück zur vorherigen Karte");
+    else if(c.back) extras.push("zurück, Option " + c.back.close + " wird gesperrt");
+    if(c.opts) c.opts.forEach(o => { if(o.bat) extras.push("→" + o.to + ": −" + o.bat + " % Akku"); if(o.extra) extras.push("→" + o.to + ": +" + o.extra + " min"); });
+    return `<div class="trow">${stopHTML(n)}
+      <div><div class="tt">${esc(c.title)}</div><div class="tx">${esc(where)}${ex ? " · führt zu " + ex : ""}${extras.length ? " · " + esc(extras.join(", ")) : ""}</div></div>
+      <button class="small" data-preview="${n}">Vorschau</button></div>`;
+  }).join("");
+  app.innerHTML = `
+  <article class="card" style="--line:#000;--lineFg:#fff">
+    <header class="sign"><h1>Lehreransicht</h1></header>
+    <div class="paper">
+      <p class="note">Start 4:15 pm, jede Karte +5 min. Legendary bis 5:45 pm, Just in time bis 7:00 pm, danach Too late. Kürzester Weg zum Legendary-Ende: 12 Karten. Die Vorschau startet eine Probe-Runde ab der gewählten Karte; sie wird nicht gespeichert und zählt keine Enden.</p>
+      <div class="legend">${Object.values(LINES).map(l => `<span><i style="background:${l.c}"></i>${esc(l.name)}</span>`).join("")}</div>
+      <div class="cta">
+        <button class="small" data-act="resetend">Gefundene Enden auf diesem Gerät löschen</button>
+        <button class="small" data-act="resetgame">Laufendes Spiel löschen</button>
+        <button class="small" data-act="home">Zum Startbildschirm</button>
+      </div>
+      <div class="tlist">${rows}</div>
+    </div>
+  </article>`;
+}
+
+/* ---------- render + events ---------- */
+function render(){
+  clearInterval(timerHandle);
+  if(view === "start") renderStart();
+  else if(view === "teacher") renderTeacher();
+  else renderCard();
+  renderStatus();
+}
+
+function readNames(){
+  const a = ($("#n1") && $("#n1").value.trim()) || "";
+  const b = ($("#n2") && $("#n2").value.trim()) || "";
+  store("nyc-maze-v1-names", [a,b]);
+  return [a || "Partner 1", b || "Partner 2"];
+}
+
+document.addEventListener("click", ev => {
+  const gl = ev.target.closest(".gl");
+  if(gl){
+    const host = gl.closest("p");
+    const next = host && host.nextElementSibling;
+    if(next && next.classList.contains("glbox") && next.dataset.w === gl.dataset.w){ next.remove(); return; }
+    document.querySelectorAll(".glbox").forEach(b => b.remove());
+    const box = document.createElement("div");
+    box.className = "glbox"; box.dataset.w = gl.dataset.w;
+    box.innerHTML = `<b>${esc(gl.dataset.w)}</b> – ${esc(gl.dataset.d)}`;
+    host.after(box);
+    return;
+  }
+  const el = ev.target.closest("[data-act],[data-i],[data-back],[data-preview]");
+  if(!el) return;
+  if(el.dataset.preview){ newGame(["Partner 1","Partner 2"], Number(el.dataset.preview)); return; }
+  if(el.dataset.back){ goBack(); return; }
+  if(el.dataset.i !== undefined){
+    const c = CARDS[S.cur];
+    if(c.action && !S.actionDone) return;
+    if(el.disabled) return;
+    const i = Number(el.dataset.i);
+    move(i === -1 ? {to: c.go} : c.opts[i]);
+    return;
+  }
+  const act = el.dataset.act;
+  if(act === "start"){ newGame(readNames()); }
+  else if(act === "continue"){ S = load(KEY_STATE, null); S.names = readNames(); view = "game"; prevClock = ""; save(); render(); }
+  else if(act === "menu"){ view = "start"; render(); }
+  else if(act === "home"){ view = "start"; teacherOpen = false; render(); window.scrollTo(0,0); }
+  else if(act === "again"){ newGame(S.names); }
+  else if(act === "teacher"){ view = "teacher"; render(); }
+  else if(act === "pin"){ if($("#pin").value === PIN){ teacherOpen = true; render(); } else { $("#pin").value = ""; $("#pin").placeholder = "falsch"; } }
+  else if(act === "endpreview"){ S = null; view = "teacher"; render(); window.scrollTo(0,0); }
+  else if(act === "resetend"){ drop(KEY_END); el.textContent = "Enden gelöscht"; }
+  else if(act === "resetgame"){ drop(KEY_STATE); el.textContent = "Spiel gelöscht"; }
+  else if(act === "action"){
+    const a = CARDS[S.cur].action;
+    const unlock = () => { S.actionDone = true; save(); el.textContent = "Done ✓"; el.disabled = true;
+      const o = $("#opts"); if(o) o.classList.remove("locked"); const h = document.querySelector(".lockhint"); if(h) h.remove(); };
+    if(!a.timer){ unlock(); return; }
+    let left = a.timer; el.disabled = true; el.textContent = left + " s";
+    clearInterval(timerHandle);
+    timerHandle = setInterval(() => { left--; if(left <= 0){ clearInterval(timerHandle); unlock(); } else el.textContent = left + " s"; }, 1000);
+  }
+});
+document.addEventListener("keydown", ev => { if(ev.key === "Enter" && ev.target.id === "pin"){ const b = document.querySelector('[data-act="pin"]'); if(b) b.click(); } });
+
+render();
+</script>
+</body>
+</html>
